@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  fortress:
+    build: .
+    image: sovereign-ei:dev
+    container_name: fortress-ei
+    ports:
+      - "127.0.0.1:3000:3000"  # Loopback only
+    environment:
+      - NODE_ENV=production
+      - NO_CLOUD=true
+    networks:
+      - sovereign-net
+    restart: unless-stopped
+
+  ros2-bridge:
+    image: osrf/ros:humble-desktop
+    container_name: ros2-observer
+    networks:
+      - sovereign-net
+    command: ros2 topic list  # Read-only DDS introspect
+
+networks:
+  sovereign-net:
+    driver: bridge
+    internal: true  # No external net, air-gapped
