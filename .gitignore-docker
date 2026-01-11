@@ -1,0 +1,7 @@
+# Docker & Container Configuration
+.env
+.env.*
+.env.local
+.env.production
+*.log
+docker-compose.override.yml
