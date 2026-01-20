@@ -1,10 +1,14 @@
 {
-  "name": "hackerwatch-sovereign",
+  "name": "hackerwatch-fortress",
   "version": "3.0.0",
+  "description": "Sovereign ROS 2 Security Monitoring",
   "main": "server.js",
-  "scripts": { "start": "node server.js" },
   "dependencies": {
     "express": "^4.18.2",
-    "ws": "^8.14.2"
+    "ws": "^8.14.2",
+    "rclnodejs": "^0.21.6"
+  },
+  "scripts": {
+    "start": "node server.js"
   }
 }
