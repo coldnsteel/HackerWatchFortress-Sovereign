@@ -1,107 +1,39 @@
 const express = require('express');
 const WebSocket = require('ws');
+const path = require('path');
+
 const app = express();
+const PORT = process.env.PORT || 3000;
+const WS_PORT = process.env.WEBSOCKET_PORT || 8080;
+const AUTH_TOKEN = process.env.AUTH_TOKEN || 'change-this-token-immediately';
 
-app.get('/', (req, res) => {
-  res.send(`<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>HackerWatch Sovereign v3.0</title>
-  <style>
-    body { background: #0a0a0a; color: #00ff00; font-family: monospace; padding: 20px; }
-    .banner { background: #ff0000; color: #000; padding: 15px; text-align: center; font-weight: bold; margin-bottom: 20px; }
-    .section { border: 2px solid #00ff00; padding: 20px; margin: 15px 0; border-radius: 10px; }
-    button { background: #00ff00; color: #000; padding: 12px 25px; border: none; cursor: pointer; margin: 10px 5px; font-weight: bold; }
-    .log { font-size: 0.9em; border-left: 3px solid #00ff00; padding-left: 10px; margin: 5px 0; }
-  </style>
-</head>
-<body>
-  <div class="banner">HackerWatch Sovereign v3.0 - No Government Ties</div>
-  
-  <div class="section">
-    <h2>System Status</h2>
-    <div>Status: <strong id="status">READY</strong></div>
-    <div>IP: <span id="ip">Loading...</span></div>
-    <button onclick="connect()">Connect Backend</button>
-    <button onclick="startMonitoring()">Start Monitoring</button>
-  </div>
-  
-  <div class="section">
-    <h2>Security Logs</h2>
-    <div id="logs">
-      <div class="log">[INIT] Sovereign Fortress v3.0</div>
-      <div class="log">[INFO] No government ties</div>
-      <div class="log">[INFO] Personal use only</div>
-    </div>
-  </div>
-  
-  <div style="text-align:center;margin-top:20px;">
-    <p>Contact: lexalytics@yahoo.com</p>
-    <p>Emmanuel - God With Us</p>
-  </div>
-  
-  <script>
-    let ws = null;
-    
-    async function detectIP() {
-      try {
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        document.getElementById('ip').textContent = data.ip;
-        addLog('IP detected: ' + data.ip);
-      } catch (error) {
-        document.getElementById('ip').textContent = 'Detection failed';
-      }
-    }
-    
-    function connect() {
-      ws = new WebSocket('ws://localhost:8080');
-      ws.onopen = () => {
-        document.getElementById('status').textContent = 'CONNECTED';
-        addLog('Backend connected');
-      };
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        addLog(data.message);
-      };
-      ws.onerror = () => addLog('Connection error');
-    }
-    
-    function startMonitoring() {
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ command: 'start' }));
-        addLog('Monitoring started');
-      } else {
-        addLog('Connect backend first');
-      }
-    }
-    
-    function addLog(message) {
-      const now = new Date().toLocaleTimeString();
-      document.getElementById('logs').innerHTML += 
-        '<div class="log">[' + now + '] ' + message + '</div>';
-    }
-    
-    detectIP();
-  </script>
-</body>
-</html>`);
-});
+app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/health', (req, res) => res.json({ ok: true }));
-
-const wss = new WebSocket.Server({ port: 8080 });
-wss.on('connection', ws => {
-  ws.send(JSON.stringify({ type: 'SYSTEM', message: 'Sovereign Fortress connected' }));
-  ws.on('message', data => {
-    try {
-      const cmd = JSON.parse(data);
-      if (cmd.command === 'start') {
-        ws.send(JSON.stringify({ type: 'SYSTEM', message: 'Monitoring activated' }));
-      }
-    } catch (e) {}
+// Status endpoints
+app.get('/health', (req, res) => res.json({ status: 'READY', service: 'HackerWatch Sovereign' }));
+app.get('/status', (req, res) => {
+  res.json({
+    status: 'SOVEREIGN',
+    mode: 'air-gapped',
+    cloud: false,
+    timestamp: new Date().toISOString()
   });
 });
 
-app.listen(3000, () => console.log('Sovereign Fortress running on port 3000'));
+app.listen(PORT, '127.0.0.1', () => {
+  console.log(`🚨 HackerWatch Sovereign running on http://127.0.0.1:${PORT}`);
+});
+
+// Local WebSocket
+const wss = new WebSocket.Server({ port: WS_PORT, host: '127.0.0.1' });
+
+wss.on('connection', (ws, req) => {
+  const auth = new URL(req.url, 'ws://localhost').searchParams.get('token');
+  if (auth !== AUTH_TOKEN) {
+    ws.close(1008, 'Unauthorized');
+    return;
+  }
+  ws.send(JSON.stringify({ type: 'SYSTEM', message: 'Sovereign Fortress Connected - No Government Ties' }));
+});
+
+console.log('✅ Sovereign Fortress Initialized');
