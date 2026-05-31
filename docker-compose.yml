@@ -11,6 +11,20 @@ services:
     networks:
       - sovereign-net
     restart: unless-stopped
+    # Security best practices
+    user: "node"
+    cap_drop:
+      - ALL
+    read_only: false   # needed for logging
+
+  # Optional: ROS 2 observer (read-only)
+  # ros2-bridge:
+  #   image: osrf/ros:humble-desktop
+  #   container_name: ros2-observer
+  #   networks:
+  #     - sovereign-net
+  #   command: ros2 topic list
+  #   restart: unless-stopped
 
 networks:
   sovereign-net:
